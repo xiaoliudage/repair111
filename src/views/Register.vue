@@ -111,10 +111,14 @@ const handleRegister = async () => {
     }
 
     const response = await axios.post(url, data);
-
-    if (response.data.success) {
+    
+    // 添加调试日志查看完整响应
+    console.log('注册响应数据:', response.data);
+    
+    // 修改成功条件判断，兼容不同后端响应格式
+    if (response.data.success || response.data.code === 200 || response.status === 200) {
       showToast('注册成功');
-      router.push('/login');
+      router.push('/profile');
     } else {
       showToast(response.data.message || '注册失败');
     }
