@@ -1,5 +1,102 @@
 <template>
   <div class="register-container">
+    <van-nav-bar title="用户注册" class="custom-nav" />
+    <div class="register-form">
+      <van-field
+        v-model="username"
+        label="用户名"
+        placeholder="请输入用户名"
+        :rules="[{ required: true, message: '请输入用户名' }]"
+      />
+      <van-field
+        v-model="password"
+        label="密码"
+        type="password"
+        placeholder="请输入密码"
+        :rules="[{ required: true, message: '请输入密码' }]"
+      />
+      <!-- 身份选择单选框 -->
+      <div class="role-selection">
+        <van-radio-group v-model="role" direction="horizontal">
+          <van-radio name="0">普通用户</van-radio>
+          <van-radio name="1">维修工人</van-radio>
+        </van-radio-group>
+      </div>
+      <van-button type="primary" @click="handleRegister" class="register-btn">注册</van-button>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { showToast } from 'vant';
+import axios from 'axios';
+
+const username = ref('');
+const password = ref('');
+const role = ref('0'); // 默认普通用户
+const router = useRouter();
+
+const handleRegister = async () => {
+  try {
+    const response = await axios.post('http://localhost:8080/user/add', {
+      username: username.value,
+      password: password.value,
+      role: parseInt(role.value) // 转换为数字类型
+    });
+    if (response.data) {
+      showToast('注册成功');
+      router.push('/login'); // 跳转到登录页
+    }
+  } catch (error) {
+    showToast('注册失败：' + (error.response?.data?.message || error.message));
+  }
+};
+</script>
+
+<style scoped>
+/* 添加单选框样式确保可见 */
+.role-selection {
+  margin: 15px 0;
+}
+
+.role-radio-group {
+  display: flex;
+  gap: 20px;
+  padding: 10px 0;
+}
+
+.role-radio {
+  display: flex;
+  align-items: center;
+}
+
+.register-container {
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.register-form {
+  padding: 20px;
+}
+
+.role-selection {
+  margin: 20px 0;
+  padding: 15px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+.register-btn {
+  margin-top: 20px;
+}
+</style>
+
+
+
+<!-- <template>
+  <div class="register-container">
     <van-nav-bar title="用户注册" />
     <div class="register-form">
       <van-form @submit="onSubmit">
@@ -141,4 +238,4 @@ const goToLogin = () => {
 .login-link a {
   color: #1989fa;
 }
-</style>
+</style> -->
