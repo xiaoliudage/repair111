@@ -67,8 +67,7 @@ const goToLogin = () => {
 };
 
 const selectService = (service) => {
-  serviceStore.selectService(service);
-  router.push('/services');
+  router.push({ path: '/services', query: { type: service.name } });
 };
 </script>
 

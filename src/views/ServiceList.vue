@@ -50,7 +50,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useServiceStore } from '../store';
 import axios from 'axios';
 import { Icon as VanIcon, showToast } from 'vant';
@@ -64,10 +64,15 @@ const loading = ref(false);
 const finished = ref(false);
 const serviceList = ref([]);
 
+const route = useRoute();
+
 onMounted(async () => {
   try {
-    // 初始加载所有维修人员
-    const response = await axios.get('/api/repair/find', { params: { type: '' } });
+    // 从URL参数获取搜索类型
+    const searchType = route.query.type || '';
+    searchValue.value = searchType;
+    // 使用参数调用搜索API
+    const response = await axios.get('/api/repair/find', { params: { type: searchType } });
     serviceList.value = response.data;
   } catch (error) {
     console.error('Error fetching repair workers:', error);
