@@ -53,7 +53,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useServiceStore } from '../store';
 import axios from 'axios';
-import { Icon as VanIcon } from 'vant';
+import { Icon as VanIcon, showToast } from 'vant';
 
 const router = useRouter();
 const serviceStore = useServiceStore();
@@ -63,28 +63,32 @@ const activeTab = ref(0);
 const loading = ref(false);
 const finished = ref(false);
 const serviceList = ref([]);
-const allWorkers = ref([]);
 
 onMounted(async () => {
   try {
-    const response = await axios.get('/api/repair/getAll');
-    allWorkers.value = response.data;
-    serviceList.value = allWorkers.value;
+    // 初始加载所有维修人员
+    const response = await axios.get('/api/repair/find', { params: { type: '' } });
+    serviceList.value = response.data;
   } catch (error) {
     console.error('Error fetching repair workers:', error);
+    showToast('加载失败，请重试');
   }
 });
 
-const onSearch = (value) => {
-  if (!value) {
-    serviceList.value = allWorkers.value;
-    return;
+const onSearch = async (value) => {
+  try {
+    loading.value = true;
+    const response = await axios.get('/api/repair/find', { params: { type: value } });
+    serviceList.value = response.data;
+    if (response.data.length === 0) {
+      showToast('未找到匹配的维修师傅');
+    }
+  } catch (error) {
+    console.error('搜索失败:', error);
+    showToast('搜索失败，请重试');
+  } finally {
+    loading.value = false;
   }
-  const searchTerm = value.toLowerCase();
-  serviceList.value = allWorkers.value.filter(worker => 
-    worker.name.toLowerCase().includes(searchTerm) || 
-    worker.serviceType.toLowerCase().includes(searchTerm)
-  );
 };
 
 const onTabChange = (tabIndex) => {

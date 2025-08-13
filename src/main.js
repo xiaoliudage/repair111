@@ -1,36 +1,57 @@
 import './assets/main.css';
-
 import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router';
 import pinia from './store';
-import { Picker, Popup, Cell, CellGroup } from 'vant';
-import { Button, Tabbar, TabbarItem, NavBar, Field, Form, Toast, List, Card } from 'vant';
+
+// 按需引入 Vant 组件（按字母顺序排序，方便维护）
+import {
+  Button,
+  Card,
+  Cell,
+  CellGroup,
+  Checkbox,
+  CheckboxGroup,
+  Field,
+  Form,
+  List,
+  NavBar,
+  Picker,
+  Popup,
+  Search,  // 新增 Search 组件
+  Tabbar,
+  TabbarItem,
+  Toast,
+  // 可根据需要继续添加其他组件
+} from 'vant';
 import 'vant/lib/index.css';
-import { Checkbox, CheckboxGroup } from 'vant';
 
 const app = createApp(App);
 
-app.use(Checkbox);
-app.use(CheckboxGroup);
-app.use(Cell);
-app.use(CellGroup);
+// 全局注册 Vant 组件（按字母顺序排序）
+[
+  Button,
+  Card,
+  Cell,
+  CellGroup,
+  Checkbox,
+  CheckboxGroup,
+  Field,
+  Form,
+  List,
+  NavBar,
+  Picker,
+  Popup,
+  Search,  // 注册 Search 组件
+  Tabbar,
+  TabbarItem,
+  Toast,
+].forEach(component => {
+  app.use(component);
+});
 
-app.use(Picker);
-app.use(Popup);
-
-// 注册Vant组件
-app.use(Button);
-app.use(Tabbar);
-app.use(TabbarItem);
-app.use(NavBar);
-app.use(Field);
-app.use(Form);
-app.use(Toast);
-app.use(List);
-app.use(Card);
-
-
+// 注册路由和状态管理
 app.use(router);
 app.use(pinia);
+
 app.mount('#app');
