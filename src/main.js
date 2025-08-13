@@ -4,7 +4,7 @@ import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router';
 import pinia from './store';
-import { Picker, Popup } from 'vant';
+import { Picker, Popup, Cell, CellGroup } from 'vant';
 import { Button, Tabbar, TabbarItem, NavBar, Field, Form, Toast, List, Card } from 'vant';
 import 'vant/lib/index.css';
 import { Checkbox, CheckboxGroup } from 'vant';
@@ -13,6 +13,8 @@ const app = createApp(App);
 
 app.use(Checkbox);
 app.use(CheckboxGroup);
+app.use(Cell);
+app.use(CellGroup);
 
 app.use(Picker);
 app.use(Popup);

@@ -54,6 +54,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useServiceStore } from '../store';
+import axios from 'axios';
 
 const router = useRouter();
 const serviceStore = useServiceStore();
@@ -63,24 +64,28 @@ const activeTab = ref(0);
 const loading = ref(false);
 const finished = ref(false);
 const serviceList = ref([]);
+const allWorkers = ref([]);
 
-// 模拟服务列表数据
-const mockServices = [
-  { id: 1, name: '张师傅', avatar: 'https://img01.yzcdn.cn/vant/cat.jpeg', rating: 5, serviceType: '水电维修', distance: 0.8, price: 80 },
-  { id: 2, name: '李师傅', avatar: 'https://img01.yzcdn.cn/vant/cat.jpeg', rating: 4.5, serviceType: '家电维修', distance: 1.2, price: 60 },
-  { id: 3, name: '王师傅', avatar: 'https://img01.yzcdn.cn/vant/cat.jpeg', rating: 4, serviceType: '管道疏通', distance: 1.5, price: 100 },
-  { id: 4, name: '赵师傅', avatar: 'https://img01.yzcdn.cn/vant/cat.jpeg', rating: 5, serviceType: '水电维修', distance: 2.0, price: 80 },
-  { id: 5, name: '陈师傅', avatar: 'https://img01.yzcdn.cn/vant/cat.jpeg', rating: 4.5, serviceType: '家具维修', distance: 2.5, price: 70 }
-];
-
-onMounted(() => {
-  // 初始化加载数据
-  serviceList.value = mockServices;
+onMounted(async () => {
+  try {
+    const response = await axios.get('/api/repair/getAll');
+    allWorkers.value = response.data;
+    serviceList.value = allWorkers.value;
+  } catch (error) {
+    console.error('Error fetching repair workers:', error);
+  }
 });
 
 const onSearch = (value) => {
-  // 搜索逻辑
-  console.log('搜索:', value);
+  if (!value) {
+    serviceList.value = allWorkers.value;
+    return;
+  }
+  const searchTerm = value.toLowerCase();
+  serviceList.value = allWorkers.value.filter(worker => 
+    worker.name.toLowerCase().includes(searchTerm) || 
+    worker.serviceType.toLowerCase().includes(searchTerm)
+  );
 };
 
 const onTabChange = (tabIndex) => {
@@ -91,11 +96,8 @@ const onTabChange = (tabIndex) => {
 const onLoad = () => {
   // 加载更多逻辑
   setTimeout(() => {
-    serviceList.value.push(...mockServices);
     loading.value = false;
-    if (serviceList.value.length >= 15) {
-      finished.value = true;
-    }
+    finished.value = true;
   }, 1000);
 };
 
