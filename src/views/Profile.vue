@@ -3,12 +3,8 @@
     <van-nav-bar title="个人中心" />
     <div v-if="!isLogin" class="login-prompt">
       <div class="prompt-content">
-        <img src="@/assets/logo.svg" alt="logo" class="logo" />
         <p class="prompt-text">请先登录，享受更多服务</p>
-        <div class="login-buttons">
-          <van-button type="primary" @click="goToLogin">登录</van-button>
-          <van-button type="default" @click="goToRegister">注册</van-button>
-        </div>
+        <van-button type="primary" @click="goToLogin">立即登录</van-button>
       </div>
     </div>
     <div v-else class="profile-content">
