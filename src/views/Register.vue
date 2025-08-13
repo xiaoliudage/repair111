@@ -28,10 +28,20 @@
 
       <!-- 维修领域输入框 -->
       <van-field 
-        v-if="selectedRole === '维修工人'" 
-        v-model="repairField" 
-        label="维修领域" 
-        placeholder="请输入维修领域" 
+        v-if="selectedRole === '维修工人'"
+        v-model="repairField"
+        label="维修领域"
+        placeholder="请输入维修领域"
+        clearable 
+      />
+      
+      <!-- 基础费用输入框 -->
+      <van-field 
+        v-if="selectedRole === '维修工人'"
+        v-model="baseFee"
+        label="基础费用"
+        placeholder="请输入基础费用"
+        type="number"
         clearable 
       />
 
@@ -54,6 +64,7 @@ const address = ref('');
 const selectedRole = ref(''); // 存储'普通用户'或'维修工人'
 const selectedRoleText = computed(() => selectedRole.value); // 直接显示选中文本
 const repairField = ref('');
+const baseFee = ref('');
 const showRolePicker = ref(false);
 const router = useRouter();
 
@@ -90,65 +101,54 @@ const handleRegister = async () => {
     return;
   }
 
-  // 维修工人需要验证维修领域
-  if (selectedRole.value === '维修工人' && !repairField.value) {
-    showToast('请输入维修领域');
-    return;
+  // 维修工人需要验证维修领域和基础费用
+  if (selectedRole.value === '维修工人') {
+    if (!repairField.value) {
+      showToast('请输入维修领域');
+      return;
+    }
+    if (!baseFee.value) {
+      showToast('请输入基础费用');
+      return;
+    }
   }
 
   try {
     let url = '';
-    let data = {
+    const data = {
       username: username.value,
       password: password.value,
       phone: phone.value,
-      address: address.value
-      // 不再传递role字段
+      address: address.value,
+      role: selectedRole.value,
     };
 
-    // 根据角色选择不同的API
-    if (selectedRole.value === '普通用户') {
-      // url = 'http://localhost:8080/user/add';
-      url = '/api/user/add'; 
-    } else {
-      // url = 'http://localhost:8080/user/repair_add';
-      url = '/api/user/repair_add';
+    // 如果是维修工人，添加额外字段
+    if (selectedRole.value === '维修工人') {
       data.repairField = repairField.value;
+      data.baseFee = Number(baseFee.value);
+    }
+
+    if (selectedRole.value === '普通用户') {
+      url = '/api/user/register';
+    } else {
+      url = '/api/user/repair_add';
     }
 
     const response = await axios.post(url, data);
-    
-    // 添加调试日志查看完整响应
-    console.log('注册响应数据:', response.data);
-    
-    // 修改成功条件判断，兼容不同后端响应格式
-    if (response.data.success || response.data.code === 200 || response.status === 200) {
-      showToast('注册成功');
-      router.push('/profile');
-    } else {
-      showToast(response.data.message || '注册失败');
-    }
+    showToast('注册成功');
+    router.push('/login');
   } catch (error) {
-    console.error('注册请求失败:', error);
-    showToast(error.response?.data?.message || '注册请求失败，请稍后再试');
+    showToast('注册失败: ' + (error.response?.data?.message || error.message));
   }
 };
 </script>
 
 <style scoped>
 .register-container {
-  padding: 16px;
+  padding-top: 46px;
 }
-
 .form-group {
-  margin-top: 20px;
-}
-
-.van-button {
-  margin-top: 20px;
-}
-
-.van-field__control--readonly {
-  color: #323233;
+  padding: 16px;
 }
 </style>
