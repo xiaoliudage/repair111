@@ -13,19 +13,20 @@
     </div>
     <div v-else class="profile-content">
       <div class="user-info">
-        <img :src="userInfo.avatar" alt="头像" class="avatar" />
         <div class="user-details">
           <h2 class="username">{{ userInfo.username }}</h2>
           <p class="user-type">{{ userTypeText }}</p>
+          <p class="user-contact">{{ userInfo.phone }}</p>
+          <p class="user-address">{{ userInfo.address }}</p>
         </div>
       </div>
       <van-cell-group class="profile-menu">
-        <van-cell title="我的订单" icon="order-o" @click="goToOrders" />
-        <van-cell title="我的收藏" icon="star-o" @click="goToFavorites" />
+        <van-cell title="查看订单" icon="order-o" @click="goToOrders" />
+        <van-cell title="修改个人信息" icon="edit" @click="goToEditProfile" />
         <van-cell title="消息通知" icon="bell-o" @click="goToNotifications" />
-        <van-cell title="设置" icon="setting-o" @click="goToSettings" />
-        <van-cell title="帮助中心" icon="question-o" @click="goToHelp" />
-        <van-cell title="关于我们" icon="info-o" @click="goToAbout" />
+        <van-cell title="我的评价" icon="comment-o" @click="goToMyReviews" />
+        <van-cell v-if="userType === 'repair-worker'" title="查看发布任务" icon="task" @click="goToPublishedTasks" />
+        <van-cell title="注销账号" icon="delete" @click="deleteAccount" class="danger-cell" />
         <van-cell title="退出登录" icon="logout" @click="logout" class="logout-cell" />
       </van-cell-group>
     </div>
@@ -41,7 +42,7 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '../store';
-import { showToast } from 'vant';
+import { showToast, showConfirmDialog } from 'vant';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -50,9 +51,9 @@ const isLogin = computed(() => userStore.isLogin);
 const userInfo = computed(() => userStore.userInfo);
 const userType = computed(() => userStore.userType);
 
-const userTypeText = computed(() => {
+/* const userTypeText = computed(() => {
   return userType.value === 'customer' ? '普通用户' : '维修师傅';
-});
+}); */
 
 const goToLogin = () => {
   router.push('/login');
@@ -91,6 +92,35 @@ const logout = () => {
   showToast('退出登录成功');
   router.push('/');
 };
+
+// 添加新方法
+const goToEditProfile = () => {
+  router.push('/edit-profile');
+};
+
+const goToMyReviews = () => {
+  router.push('/my-reviews');
+};
+
+const goToPublishedTasks = () => {
+  router.push('/published-tasks');
+};
+
+const deleteAccount = async () => {
+  try {
+    await showConfirmDialog({
+      title: '确认注销',
+      message: '注销后将删除所有数据，不可恢复',
+    });
+    // 调用注销API
+    await axios.post('/api/user/delete');
+    userStore.logout();
+    showToast('注销成功');
+    router.push('/login');
+  } catch (error) {
+    showToast('已取消');
+  }
+};
 </script>
 
 <style scoped>
@@ -126,35 +156,26 @@ const logout = () => {
   gap: 10px;
 }
 
+/* 移除头像相关样式 */
 .user-info {
-  display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   padding: 20px;
-  border-bottom: 1px solid #eee;
 }
 
-.avatar {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  margin-right: 15px;
+.user-details {
+  text-align: left;
 }
 
-.username {
-  font-size: 20px;
-  margin-bottom: 5px;
-}
-
-.user-type {
+.user-contact,
+.user-address {
+  margin: 5px 0;
   color: #666;
-  background-color: #f5f5f5;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 12px;
 }
 
-.profile-menu {
-  margin-top: 10px;
+/* 添加危险操作样式 */
+.danger-cell {
+  color: #f53f3f;
 }
 
 .logout-cell {
