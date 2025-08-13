@@ -1,28 +1,23 @@
 <template>
   <div class="worker-detail-container">
     <van-nav-bar title="师傅详情" />
-    <div class="worker-header">
-      <img :src="workerInfo.avatar" alt="头像" class="avatar" />
+    <div class="worker-header" v-if="workerDetail">
       <div class="worker-info">
-        <h2 class="name">{{ workerInfo.name }}</h2>
-        <div class="rating-distance">
-          <van-rate v-model="workerInfo.rating" readonly size="16" />
-          <span class="distance">{{ workerInfo.distance }}km</span>
-        </div>
-        <div class="service-type">服务类型: {{ workerInfo.serviceType }}</div>
-        <div class="price">价格: {{ workerInfo.price }}元起</div>
+        <h2 class="name">{{ workerDetail.username }}</h2>
+        <div class="service-type">电话: {{ workerDetail.phone }}</div>
+        <div class="price">地址: {{ workerDetail.address }}</div>
+        <div class="price">价格: {{ workerDetail.baseFee }}元起</div>
       </div>
     </div>
-    <div class="worker-content">
+    <div v-else class="loading">加载中...</div>
+    <div v-if="workerDetail" class="worker-content">
       <van-tabs v-model="activeTab">
         <van-tab title="服务介绍">
           <div class="introduction">
-            <h3>个人简介</h3>
-            <p>{{ workerInfo.introduction }}</p>
-            <h3>服务内容</h3>
-            <van-cell-group>
-              <van-cell v-for="item in workerInfo.services" :key="item.id" :title="item" />
-            </van-cell-group>
+            <h3>服务领域</h3>
+            <p>{{ workerDetail.repairField }}</p>
+            <h3>基础费用</h3>
+            <p>￥{{ workerDetail.baseFee }}元起</p>
           </div>
         </van-tab>
         <van-tab title="用户评价">
@@ -61,68 +56,45 @@
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { showToast } from 'vant';
+import axios from 'axios';
 
 const route = useRoute();
 const workerId = route.params.id;
+const workerDetail = ref(null);
 
-// 模拟维修师傅数据
-const workerInfo = ref({
-  id: 1,
-  name: '张师傅',
-  avatar: 'https://img01.yzcdn.cn/vant/cat.jpeg',
-  rating: 5,
-  distance: 0.8,
-  serviceType: '水电维修',
-  price: 80,
-  introduction: '从事水电维修工作10年，经验丰富，技术过硬，服务周到。擅长水管维修、电路故障排查、灯具安装等。',
-  services: ['水管维修', '电路维修', '灯具安装', '开关插座更换', '水龙头更换', '马桶维修']
+console.log('路由参数ID:', workerId);
+console.log('请求URL:', `/api/repair/getById/${workerId}`);
+
+onMounted(async () => {
+  try {
+    const response = await axios.get(`/api/repair/getById/${workerId}`);
+    console.log('API响应:', response.data);
+    workerDetail.value = response.data;
+  } catch (error) {
+    console.error('请求错误详情:', error);
+    showToast(`获取失败: ${error.message}`);
+  }
 });
 
-// 模拟评价数据
-const reviews = ref([
-  {
-    id: 1,
-    reviewer: '李先生',
-    rating: 5,
-    content: '师傅技术很好，很快就修好了我的水管，价格也合理。',
-    time: '2023-10-15'
-  },
-  {
-    id: 2,
-    reviewer: '王女士',
-    rating: 4,
-    content: '服务很及时，态度也很好，就是来的时候稍微晚了一点。',
-    time: '2023-10-10'
-  }
-]);
-
+// 用户评价相关数据
+const reviews = ref([]);
 const activeTab = ref(0);
 const loading = ref(false);
 const finished = ref(false);
 
-onMounted(() => {
-  // 在实际应用中，这里应该通过API获取真实数据
-  console.log('获取维修师傅详情，ID:', workerId);
-});
-
 const onLoad = () => {
-  // 加载更多评价
+  // 实际项目中应从API加载评价数据
   setTimeout(() => {
-    reviews.value.push(...reviews.value);
     loading.value = false;
-    if (reviews.value.length >= 6) {
-      finished.value = true;
-    }
+    finished.value = true;
   }, 1000);
 };
 
 const makePhoneCall = () => {
-  // 模拟电话联系
-  showToast('正在拨打张师傅电话...');
+  showToast('正在拨打...');
 };
 
 const sendMessage = () => {
-  // 模拟发送消息
   showToast('跳转到消息界面');
 };
 </script>

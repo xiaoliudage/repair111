@@ -26,13 +26,13 @@
           <template #default>
             <div class="service-item">
               <div class="service-info">
-                <div class="name">
-                  <span class="name">{{ item.username }}</span>
-                </div>
+                <div class="name">{{ item.username }}</div>
                 <div class="contact-info">
-                  <span class="phone">{{ item.phone }}</span>
-                  <span class="address">{{ item.address }}</span>
-                  <span class="price">{{ item.baseFee }}元起</span>
+                  <div class="contact-row">
+                    <span class="phone"><van-icon name="phone" class="icon" /> {{ item.phone }}</span>
+                    <span class="address"><van-icon name="location" class="icon" /> {{ item.address }}</span>
+                  </div>
+                  <span class="price"><van-icon name="credit-card" class="icon" /> {{ item.baseFee }}元起</span>
                 </div>
               </div>
             </div>
@@ -53,6 +53,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useServiceStore } from '../store';
 import axios from 'axios';
+import { Icon as VanIcon } from 'vant';
 
 const router = useRouter();
 const serviceStore = useServiceStore();
@@ -107,61 +108,62 @@ const goToWorkerDetail = (id) => {
 <style scoped>
 .service-list-container {
   padding-bottom: 50px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
 }
 
 .search-bar {
-  padding: 10px;
+  padding: 15px;
+  background-color: white;
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
 }
 
 .service-filter {
+  background-color: white;
   border-bottom: 1px solid #eee;
+}
+
+.service-list {
+  padding: 10px;
 }
 
 .service-item {
   display: flex;
-  padding: 10px 0;
+  padding: 25px;
+  margin: 0 0 18px 0;
+  background-color: white;
+  border-radius: 18px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
 }
 
-.avatar {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  margin-right: 10px;
-}
-
-.service-info {
-  flex: 1;
-}
-
-.name-rating {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 5px;
+.service-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
 }
 
 .name {
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #222;
+  letter-spacing: 0.3px;
 }
 
-.service-type {
-  color: #666;
-  font-size: 14px;
-  margin-bottom: 5px;
-}
-
-.distance-price {
+.contact-info {
   display: flex;
-  justify-content: space-between;
-  color: #999;
-  font-size: 12px;
-}
-
-.distance {
-  color: #fa550f;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .price {
   color: #f53f3f;
+  font-weight: 600;
+  font-size: 19px;
+  padding: 12px 0;
+  margin-top: 5px;
+  border-top: 1px dashed #f2f2f2;
+  padding-top: 15px;
 }
 </style>
