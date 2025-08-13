@@ -25,16 +25,14 @@
         <van-cell v-for="item in serviceList" :key="item.id" @click="goToWorkerDetail(item.id)">
           <template #default>
             <div class="service-item">
-              <img :src="item.avatar" alt="头像" class="avatar" />
               <div class="service-info">
-                <div class="name-rating">
-                  <span class="name">{{ item.name }}</span>
-                  <van-rate v-model="item.rating" readonly size="16" />
+                <div class="name">
+                  <span class="name">{{ item.username }}</span>
                 </div>
-                <div class="service-type">{{ item.serviceType }}</div>
-                <div class="distance-price">
-                  <span class="distance">{{ item.distance }}km</span>
-                  <span class="price">{{ item.price }}元起</span>
+                <div class="contact-info">
+                  <span class="phone">{{ item.phone }}</span>
+                  <span class="address">{{ item.address }}</span>
+                  <span class="price">{{ item.baseFee }}元起</span>
                 </div>
               </div>
             </div>
