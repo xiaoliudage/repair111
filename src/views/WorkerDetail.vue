@@ -185,9 +185,15 @@ const fetchMessages = async () => {
         receiverId: currentUserId.value
       }
     });
-    // 合并消息并处理可能的空数据
-    const allMessages = [...(sentRes.data || []), ...(receivedRes.data || [])];
-    messages.value = allMessages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    // 合并并过滤消息，只保留当前用户与所选维修人员之间的对话
+    messages.value = [...sentRes.data, ...receivedRes.data]
+      .filter(msg => {
+        const msgSender = Number(msg.senderId);
+        const msgReceiver = Number(msg.receiverId);
+        return (msgSender === currentUserId.value && msgReceiver === workerId) || 
+               (msgSender === workerId && msgReceiver === currentUserId.value);
+      })
+      .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
     
     // 显示无消息提示
     if (messages.value.length === 0) {
