@@ -67,7 +67,12 @@ console.log('请求URL:', `/api/repair/getById/${workerId}`);
 
 onMounted(async () => {
   try {
-    const response = await axios.get(`/api/repair/getById/${workerId}`);
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`/api/repair/getById/${workerId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
     console.log('API响应:', response.data);
     workerDetail.value = response.data;
   } catch (error) {
