@@ -49,6 +49,23 @@
       <van-button type="primary" block @click="makePhoneCall">电话联系</van-button>
       <van-button type="default" block @click="sendMessage">发送消息</van-button>
     </div>
+
+    <!-- 消息弹出层 -->
+    <van-popup v-model:show="showMessagePopup" position="bottom" round>
+      <div class="message-popup">
+        <van-field
+          v-model="messageContent"
+          placeholder="请输入消息内容"
+          rows="4"
+          type="textarea"
+          autosize
+        />
+        <div class="popup-buttons">
+          <van-button type="default" @click="showMessagePopup = false">取消</van-button>
+          <van-button type="primary" @click="handleSend">发送</van-button>
+        </div>
+      </div>
+    </van-popup>
   </div>
 </template>
 
@@ -57,13 +74,34 @@ import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { showToast } from 'vant';
 import axios from 'axios';
+import request from '../utils/request';
 
 const route = useRoute();
 const workerId = route.params.id;
 const workerDetail = ref(null);
+const showMessagePopup = ref(false);
+const messageContent = ref('');
 
-console.log('路由参数ID:', workerId);
-console.log('请求URL:', `/api/repair/getById/${workerId}`);
+// 用户评价相关数据
+const reviews = ref([
+  {
+    id: 1,
+    reviewer: '用户A',
+    rating: 5,
+    content: '师傅技术很好，解决问题很快！',
+    time: '2023-05-15'
+  },
+  {
+    id: 2,
+    reviewer: '用户B',
+    rating: 4,
+    content: '服务态度不错，就是价格稍贵',
+    time: '2023-04-20'
+  }
+]);
+const activeTab = ref(0);
+const loading = ref(false);
+const finished = ref(false);
 
 onMounted(async () => {
   try {
@@ -73,22 +111,15 @@ onMounted(async () => {
         Authorization: `Bearer ${token}`
       }
     });
-    console.log('API响应:', response.data);
     workerDetail.value = response.data;
   } catch (error) {
-    console.error('请求错误详情:', error);
-    showToast(`获取失败: ${error.message}`);
+    console.error('请求错误:', error);
+    showToast('获取师傅详情失败');
   }
 });
 
-// 用户评价相关数据
-const reviews = ref([]);
-const activeTab = ref(0);
-const loading = ref(false);
-const finished = ref(false);
-
 const onLoad = () => {
-  // 实际项目中应从API加载评价数据
+  // 模拟加载更多评价
   setTimeout(() => {
     loading.value = false;
     finished.value = true;
@@ -96,11 +127,37 @@ const onLoad = () => {
 };
 
 const makePhoneCall = () => {
-  showToast('正在拨打...');
+  if (workerDetail.value?.phone) {
+    showToast(`正在呼叫: ${workerDetail.value.phone}`);
+    // 实际项目中这里可以调用打电话功能
+    // window.location.href = `tel:${workerDetail.value.phone}`;
+  } else {
+    showToast('电话号码不可用');
+  }
 };
 
 const sendMessage = () => {
-  showToast('跳转到消息界面');
+  showMessagePopup.value = true;
+};
+
+const handleSend = async () => {
+  if (!messageContent.value.trim()) {
+    showToast('请输入消息内容');
+    return;
+  }
+  
+  try {
+    const response = await request.post('/common/chat', {
+      receiverId: workerId,
+      content: messageContent.value
+    });
+    showToast('发送成功');
+    messageContent.value = '';
+    showMessagePopup.value = false;
+  } catch (error) {
+    console.error('发送失败:', error);
+    showToast('发送失败，请重试');
+  }
 };
 </script>
 
@@ -115,13 +172,6 @@ const sendMessage = () => {
   border-bottom: 1px solid #eee;
 }
 
-.avatar {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  margin-right: 15px;
-}
-
 .worker-info {
   flex: 1;
 }
@@ -129,18 +179,6 @@ const sendMessage = () => {
 .name {
   font-size: 20px;
   margin-bottom: 5px;
-}
-
-.rating-distance {
-  display: flex;
-  align-items: center;
-  margin-bottom: 5px;
-}
-
-.distance {
-  margin-left: 10px;
-  color: #666;
-  font-size: 14px;
 }
 
 .service-type,
@@ -200,9 +238,25 @@ const sendMessage = () => {
   padding: 10px;
   background-color: #fff;
   border-top: 1px solid #eee;
+  gap: 10px;
 }
 
-.contact-buttons van-button {
-  margin: 0 5px;
+.message-popup {
+  padding: 16px;
+  background: #fff;
+  min-height: 200px;
+}
+
+.popup-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  justify-content: flex-end;
+}
+
+.loading {
+  padding: 20px;
+  text-align: center;
+  color: #666;
 }
 </style>
