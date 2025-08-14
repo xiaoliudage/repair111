@@ -79,8 +79,10 @@ const onSubmit = async () => {
       return;
     }
 
-    // 存储token到localStorage
+    // 清除旧token并存储新token
+    localStorage.removeItem('token');
     localStorage.setItem('token', token);
+    localStorage.setItem('userId', user.id);
     // 存储用户信息到store
     userStore.login({
       ...user,
