@@ -38,7 +38,7 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '../store';
 import { showToast } from 'vant';
-import axios from 'axios';
+import request from '../utils/request'; // 导入request工具
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -69,26 +69,28 @@ const onSubmit = async () => {
     password: password.value
   };
 
-  // 使用相对路径通过代理发送请求
-  const url = selectedRole.value === 'customer' ? '/api/user/login' : '/api/repair/login';
-
   try {
-    const response = await axios.post(url, loginDto);
-    const userData = response.data;
+    // 使用request工具发送请求
+    const response = await request.post(`/${selectedRole.value === 'customer' ? 'user' : 'repair'}/login`, loginDto);
+    const { user, token } = response.data;
 
-    if (!userData) {
-      showToast('用户名或密码错误');
+    if (!user || !token) {
+      showToast('登录失败，用户信息不完整');
       return;
     }
 
+    // 存储token到localStorage
+    localStorage.setItem('token', token);
+    // 存储用户信息到store
     userStore.login({
-      ...userData,
+      ...user,
       type: selectedRole.value
     });
+
     showToast('登录成功');
     router.push('/');
   } catch (error) {
-    showToast('登录失败，请重试');
+    showToast('登录失败，请检查用户名和密码');
   }
 };
 

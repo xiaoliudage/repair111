@@ -52,7 +52,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useServiceStore } from '../store';
-import axios from 'axios';
+import request from '@/utils/request';
 import { Icon as VanIcon, showToast } from 'vant';
 
 const router = useRouter();
@@ -72,7 +72,7 @@ onMounted(async () => {
     const searchType = route.query.type || '';
     searchValue.value = searchType;
     // 使用参数调用搜索API
-    const response = await axios.get('/api/repair/find', { params: { type: searchType } });
+    const response = await request.get('/repair/find', { params: { type: searchType } });
     serviceList.value = response.data;
   } catch (error) {
     console.error('Error fetching repair workers:', error);
@@ -83,7 +83,7 @@ onMounted(async () => {
 const onSearch = async (value) => {
   try {
     loading.value = true;
-    const response = await axios.get('/api/repair/find', { params: { type: value } });
+    const response = await request.get('/repair/find', { params: { type: value } });
     serviceList.value = response.data;
     if (response.data.length === 0) {
       showToast('未找到匹配的维修师傅');
