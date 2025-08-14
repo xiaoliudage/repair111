@@ -70,6 +70,7 @@
       <div class="message-list">
         <div v-for="msg in messages" :key="msg.id" 
              :class="['message-item', msg.senderId === currentUserId ? 'sent' : 'received']">
+          <div class="message-sender">{{ msg.senderId === currentUserId ? '我' : workerDetail.username }}</div>
           <div class="message-bubble">{{ msg.content }}</div>
           <div class="message-time">{{ formatTime(msg.createdAt) }}</div>
         </div>
@@ -83,19 +84,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { showToast } from 'vant';
 import axios from 'axios';
 import request from '../utils/request';
 
 const route = useRoute();
-const workerId = route.params.id;
+const workerId = Number(route.params.id);
 const workerDetail = ref(null);
 const showMessagePopup = ref(false);
 const showChat = ref(false);
 const messageContent = ref('');
-const currentUserId = ref(localStorage.getItem('userId'));
+const currentUserId = ref(Number(localStorage.getItem('userId')));
 const messages = ref([]);
 
 // 用户评价相关数据
@@ -154,14 +155,47 @@ const sendMessage = () => {
   fetchMessages();
 };
 
+// 在组件挂载和聊天界面显示时都获取消息
+watch(showChat, (newVal) => {
+  if (newVal) {
+    fetchMessages();
+  }
+});
+
 const fetchMessages = async () => {
   try {
-    const res = await request.get('/common/chat/get', {
-      params: { receiverId: workerId }
+    // 验证用户ID是否有效
+    if (isNaN(currentUserId.value) || isNaN(workerId)) {
+      showToast('用户ID无效，无法获取消息');
+      return;
+    }
+    
+    console.log('获取消息参数:', { currentUserId: currentUserId.value, workerId: workerId });
+    // 获取当前用户发送给维修人员的消息
+    const sentRes = await request.get('/common/chat/get1', {
+      params: {
+        senderId: currentUserId.value,
+        receiverId: workerId
+      }
     });
-    messages.value = res.data;
+    // 获取维修人员发送给当前用户的消息
+    const receivedRes = await request.get('/common/chat/get1', {
+      params: {
+        senderId: workerId,
+        receiverId: currentUserId.value
+      }
+    });
+    // 合并消息并处理可能的空数据
+    const allMessages = [...(sentRes.data || []), ...(receivedRes.data || [])];
+    messages.value = allMessages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    
+    // 显示无消息提示
+    if (messages.value.length === 0) {
+      showToast('暂无聊天记录');
+    }
   } catch (error) {
-    console.error('获取消息失败', error);
+    console.error('获取消息失败:', error);
+    showToast('获取聊天历史失败，请重试');
   }
 };
 
