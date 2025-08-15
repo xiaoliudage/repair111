@@ -1,6 +1,6 @@
 <template>
   <div class="worker-detail-container">
-    <van-nav-bar title="师傅详情" />
+    <van-nav-bar title="师傅详情" />    
     <div class="worker-header" v-if="workerDetail">
       <div class="worker-info">
         <h2 class="name">{{ workerDetail.username }}</h2>
@@ -10,6 +10,7 @@
       </div>
     </div>
     <div v-else class="loading">加载中...</div>
+    
     <div v-if="workerDetail" class="worker-content">
       <van-tabs v-model="activeTab">
         <van-tab title="服务介绍">
@@ -43,6 +44,7 @@
         </van-tab>
       </van-tabs>
     </div>
+    
     <div class="contact-buttons">
       <van-button type="primary" block @click="makePhoneCall">电话联系</van-button>
       <van-button type="default" block @click="sendMessage">发送消息</van-button>
@@ -101,20 +103,8 @@ const messages = ref([]);
 
 // 用户评价相关数据
 const reviews = ref([
-  {
-    id: 1,
-    reviewer: '用户A',
-    rating: 5,
-    content: '师傅技术很好，解决问题很快！',
-    time: '2023-05-15'
-  },
-  {
-    id: 2,
-    reviewer: '用户B',
-    rating: 4,
-    content: '服务态度不错，就是价格稍贵',
-    time: '2023-04-20'
-  }
+  { id: 1, reviewer: '用户A', rating: 5, content: '师傅技术很好，解决问题很快！', time: '2023-05-15' },
+  { id: 2, reviewer: '用户B', rating: 4, content: '服务态度不错，就是价格稍贵', time: '2023-04-20' }
 ]);
 const activeTab = ref(0);
 const loading = ref(false);
@@ -124,9 +114,7 @@ onMounted(async () => {
   try {
     const token = localStorage.getItem('token');
     const response = await axios.get(`/api/repair/getById/${workerId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+      headers: { Authorization: `Bearer ${token}` }
     });
     workerDetail.value = response.data;
   } catch (error) {
@@ -136,56 +124,34 @@ onMounted(async () => {
 });
 
 const onLoad = () => {
-  setTimeout(() => {
-    loading.value = false;
-    finished.value = true;
-  }, 1000);
+  setTimeout(() => { loading.value = false; finished.value = true; }, 1000);
 };
 
 const makePhoneCall = () => {
-  if (workerDetail.value?.phone) {
-    showToast(`正在呼叫: ${workerDetail.value.phone}`);
-  } else {
-    showToast('电话号码不可用');
-  }
+  workerDetail.value?.phone ? showToast(`正在呼叫: ${workerDetail.value.phone}`) : showToast('电话号码不可用');
 };
 
-const sendMessage = () => {
-  showChat.value = true;
-  fetchMessages();
-};
+const sendMessage = () => { showChat.value = true; fetchMessages(); };
 
-// 在组件挂载和聊天界面显示时都获取消息
-watch(showChat, (newVal) => {
-  if (newVal) {
-    fetchMessages();
-  }
-});
+// 监听聊天界面显示状态，获取历史消息
+watch(showChat, (newVal) => { if (newVal) fetchMessages(); });
 
+// 获取聊天记录
 const fetchMessages = async () => {
   try {
-    // 验证用户ID是否有效
+    // 验证用户ID有效性
     if (isNaN(currentUserId.value) || isNaN(workerId)) {
       showToast('用户ID无效，无法获取消息');
       return;
     }
-    
-    console.log('获取消息参数:', { currentUserId: currentUserId.value, workerId: workerId });
-    // 获取当前用户发送给维修人员的消息
-    const sentRes = await request.get('/common/chat/get1', {
-      params: {
-        senderId: currentUserId.value,
-        receiverId: workerId
-      }
-    });
-    // 获取维修人员发送给当前用户的消息
-    const receivedRes = await request.get('/common/chat/get1', {
-      params: {
-        senderId: workerId,
-        receiverId: currentUserId.value
-      }
-    });
-    // 合并并过滤消息，只保留当前用户与所选维修人员之间的对话
+
+    // 获取双向消息
+    const [sentRes, receivedRes] = await Promise.all([
+      request.get('/common/chat/get', { params: { senderId: currentUserId.value, receiverId: workerId } }),
+      request.get('/common/chat/get1', { params: { senderId: workerId, receiverId: currentUserId.value } })
+    ]);
+
+    // 合并、过滤并排序消息
     messages.value = [...sentRes.data, ...receivedRes.data]
       .filter(msg => {
         const msgSender = Number(msg.senderId);
@@ -194,25 +160,24 @@ const fetchMessages = async () => {
                (msgSender === workerId && msgReceiver === currentUserId.value);
       })
       .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-    
-    // 显示无消息提示
-    if (messages.value.length === 0) {
-      showToast('暂无聊天记录');
-    }
+
+    if (messages.value.length === 0) showToast('暂无聊天记录');
   } catch (error) {
     console.error('获取消息失败:', error);
     showToast('获取聊天历史失败，请重试');
   }
 };
 
+// 发送消息
 const handleSend = async () => {
   if (!messageContent.value.trim()) {
     showToast('请输入消息内容');
     return;
   }
-  
+
   try {
     const response = await request.post('/common/chat', {
+      senderId: currentUserId.value,  // 添加发送者ID
       receiverId: workerId,
       content: messageContent.value
     });
@@ -224,6 +189,7 @@ const handleSend = async () => {
   }
 };
 
+// 格式化时间
 const formatTime = (time) => {
   const date = new Date(time);
   return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
