@@ -5,7 +5,8 @@ import Register from '../views/Register.vue';
 import ServiceList from '../views/ServiceList.vue';
 import WorkerDetail from '../views/WorkerDetail.vue';
 import TaskPublish from '../views/TaskPublish.vue';
-import Profile from '../views/Profile.vue'; // 添加这行导入
+import UserProfile from '../views/UserProfile.vue';
+import Profile from '../views/Profile.vue';
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
@@ -14,7 +15,9 @@ const routes = [
   { path: '/services', name: 'ServiceList', component: ServiceList },
   { path: '/worker/:id', name: 'WorkerDetail', component: WorkerDetail },
   { path: '/publish', name: 'TaskPublish', component: TaskPublish },
-  { path: '/profile', name: 'Profile', component: Profile } // 添加这行路由配置
+  { path: '/profile', name: 'Profile', component: Profile },
+  { path: '/user/profile', name: 'UserProfile', component: UserProfile },
+  { path: '/edit-profile', redirect: '/user/profile' }
 ];
 
 const router = createRouter({

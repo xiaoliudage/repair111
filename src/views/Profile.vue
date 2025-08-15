@@ -177,4 +177,8 @@ const deleteAccount = async () => {
 .logout-cell {
   color: #f53f3f;
 }
+.profile-actions {
+  padding: 16px;
+  margin-top: 20px;
+}
 </style>
