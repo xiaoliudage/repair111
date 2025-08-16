@@ -67,8 +67,19 @@ const goToFavorites = () => {
   showToast('跳转到我的收藏页面');
 };
 
-const goToNotifications = () => {
+/* const goToNotifications = () => {
   showToast('跳转到消息通知页面');
+  router.push('/message-list');
+}; */
+
+const goToNotifications = () => {
+  const userId = localStorage.getItem('userId');
+  if (!userId) {
+    showToast('请先登录');
+    router.push('/login');
+    return;
+  }
+  router.push({ path: '/message-list', query: { id: userId } });
 };
 
 const goToSettings = () => {

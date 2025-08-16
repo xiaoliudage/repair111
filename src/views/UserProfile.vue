@@ -1,6 +1,15 @@
 <template>
   <div class="user-profile-container">
-    <van-nav-bar title="修改个人信息" left-text="返回" @click-left="goBack" />
+    <van-nav-bar title="修改个人信息" left-text="返回" @click-left="goBack">
+      <!-- 消息通知按钮 -->
+      <template #right>
+        <van-icon
+          name="message"
+          class="message-icon"
+          @click="goToMessageList"
+        />
+      </template>
+    </van-nav-bar>
     <div class="profile-form">
       <van-form @submit="handleSubmit">
         <van-field
@@ -63,7 +72,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { showToast } from 'vant';
+import { showToast, Icon } from 'vant';
 import { useUserStore } from '../store';
 import request from '../utils/request';
 
@@ -157,6 +166,18 @@ const handleSubmit = async () => {
 const goBack = () => {
   router.go(-1);
 };
+
+// 跳转到消息列表页面
+const goToMessageList = () => {
+  const userId = localStorage.getItem('userId');
+  if (!userId) {
+    showToast('用户未登录');
+    router.push('/login');
+    return;
+  }
+  // 跳转到消息列表页面并传递当前用户ID
+  router.push({ path: '/message-list', query: { id: userId } });
+};
 </script>
 
 <style scoped>
@@ -172,5 +193,10 @@ const goBack = () => {
   display: flex;
   gap: 16px;
   margin-top: 24px;
+}
+
+.message-icon {
+  margin-right: 15px;
+  font-size: 20px;
 }
 </style>
