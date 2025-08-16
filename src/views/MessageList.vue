@@ -10,7 +10,7 @@
       <van-cell
         v-for="(item, index) in messageList"
         :key="index"
-        :title="item.username"
+        :title="item.name"
         :value="`电话: ${item.phone}`"
         :label="`地址: ${item.address}`"
         @click="goToChat(item)"
@@ -50,6 +50,9 @@ const loadMessageList = async () => {
       }
     })
 
+    // 添加详细调试日志查看API返回的完整数据结构
+    console.log('API返回的完整数据:', response);
+    console.log('消息列表项数据结构:', response.data.length > 0 ? response.data[0] : '空列表');
     messageList.value = response.data
     finished.value = true
   } catch (error) {
@@ -58,63 +61,57 @@ const loadMessageList = async () => {
   } finally {
     loading.value = false
   }
-}
-
-const goBack = () => {
-  router.go(-1)
-}
-
-/* const goToChat = (contact) => {
-  router.push({ 
-    path: '/chat', 
-    query: { 
-      contact: JSON.stringify({
-        id: contact.id,
-        username: contact.username,
-        phone: contact.phone,
-        address: contact.address
-      }) 
-    } 
-  });
-}; */
-
+};
 
 const goToChat = (contact) => {
-  console.log('原始联系人数据:', contact); // 调试
+  // 添加详细调试日志查看联系人数据的所有属性
+  console.log('联系人数据完整结构:', contact);
+  console.log('可用的属性:', Object.keys(contact));
   
+  // 尝试从多个可能的字段获取用户名
+  const possibleNameFields = ['username', 'name', 'userName', 'nickname'];
+  let contactName = null;
+  for (const field of possibleNameFields) {
+    if (contact[field]) {
+      contactName = contact[field];
+      console.log(`从${field}字段获取到用户名:`, contactName);
+      break;
+    }
+  }
+  
+  if (!contactName) {
+    console.error('无法从联系人数据中获取用户名', contact);
+    showToast('无法获取联系人名称');
+    return;
+  }
+
   // 验证必要字段
-  if (!contact || typeof contact !== 'object') {
-    showToast('联系人数据无效');
+  if (!contact || typeof contact !== 'object' || !contact.id) {
+    showToast('联系人数据无效或缺少ID');
     return;
   }
 
-  // 确保必要字段存在
-  const requiredFields = ['id', 'username'];
-  const missingFields = requiredFields.filter(field => !contact[field]);
-  
-  if (missingFields.length > 0) {
-    console.error('缺少必要字段:', missingFields);
-    showToast('联系人信息不完整');
-    return;
-  }
-
-  // 构建跳转参数
+  // 构建跳转参数，使用找到的字段作为用户名
   const contactData = {
-    id: contact.id, // 不强制转为数字，后端可能期望字符串
-    username: contact.username || '未知用户',
+    id: contact.id,
+    username: contactName,
     phone: contact.phone || '',
     address: contact.address || ''
   };
 
-  // 直接传递对象，不使用encodeURIComponent
+  // 使用encodeURIComponent确保特殊字符正确传递
   router.push({
     path: '/chat',
     query: {
-      contact: JSON.stringify(contactData),
-      currentUserId: localStorage.getItem('userId') || '' // 防止undefined
+      contact: encodeURIComponent(JSON.stringify(contactData)),
+      currentUserId: localStorage.getItem('userId') || ''
     }
   });
 };
+
+const goBack = () => {
+  router.go(-1)
+}
 
 onMounted(() => {
   loadMessageList()

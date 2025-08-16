@@ -14,6 +14,7 @@
           :key="msg.id" 
           :class="['message-item', msg.senderId === currentUserId ? 'sent' : 'received']"
         >
+          <div class="message-sender">{{ getSenderName(msg) }}</div>
           <div class="message-bubble">{{ msg.content }}</div>
           <div class="message-time">{{ formatTime(msg.createdAt) }}</div>
         </div>
@@ -199,9 +200,20 @@ const handleSend = async () => {
 };
 
 // 格式化时间
+const currentUserName = ref(localStorage.getItem('username') || '我');
+
+const getSenderName = (msg) => {
+  // 确保 senderId 比较时类型一致
+  const isCurrentUser = Number(msg.senderId) === Number(props.currentUserId);
+  const senderName = isCurrentUser
+    ? (currentUserName.value || '我')
+    : (contactInfo.value?.username || '未知用户');
+  return senderName;
+};
+
 const formatTime = (time) => {
   const date = new Date(time);
-  return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+  return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
 };
 
 const goBack = () => {
@@ -273,6 +285,12 @@ onMounted(() => {
 .message-item.received .message-bubble {
   background-color: white;
   border: 1px solid #ebedf0;
+}
+
+.message-sender {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
 }
 
 .message-time {
