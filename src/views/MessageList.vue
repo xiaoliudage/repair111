@@ -80,22 +80,39 @@ const goBack = () => {
 
 
 const goToChat = (contact) => {
-  console.log('准备跳转的联系人:', contact); // 调试用
+  console.log('原始联系人数据:', contact); // 调试
   
-  // 确保传递了正确的数据结构
+  // 验证必要字段
+  if (!contact || typeof contact !== 'object') {
+    showToast('联系人数据无效');
+    return;
+  }
+
+  // 确保必要字段存在
+  const requiredFields = ['id', 'username'];
+  const missingFields = requiredFields.filter(field => !contact[field]);
+  
+  if (missingFields.length > 0) {
+    console.error('缺少必要字段:', missingFields);
+    showToast('联系人信息不完整');
+    return;
+  }
+
+  // 构建跳转参数
   const contactData = {
-    id: Number(contact.id),  // 确保转换为数字
-    username: contact.username,
-    phone: contact.phone,
-    address: contact.address
+    id: contact.id, // 不强制转为数字，后端可能期望字符串
+    username: contact.username || '未知用户',
+    phone: contact.phone || '',
+    address: contact.address || ''
   };
-  
-  router.push({ 
-    path: '/chat', 
-    query: { 
+
+  // 直接传递对象，不使用encodeURIComponent
+  router.push({
+    path: '/chat',
+    query: {
       contact: JSON.stringify(contactData),
-      currentUserId: localStorage.getItem('userId') // 显式传递当前用户ID
-    } 
+      currentUserId: localStorage.getItem('userId') || '' // 防止undefined
+    }
   });
 };
 

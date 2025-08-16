@@ -49,7 +49,11 @@ import request from '../utils/request';
 
 const props = defineProps({
   contact: Object,
-  currentUserId: String
+  // currentUserId改为可选，增加默认值
+  currentUserId: {
+    type: String,
+    default: () => localStorage.getItem('userId')
+  }
 });
 
 const router = useRouter();
@@ -59,39 +63,79 @@ const messageContent = ref('');
 const messages = ref([]);
 const loading = ref(false);
 
-// 从路由参数或props获取联系人信息
+
+
 const contactInfo = computed(() => {
-  return props.contact || (route.query.contact ? JSON.parse(route.query.contact) : null);
+  if (props.contact) {
+    // 增强验证：确保id存在且为有效数字
+    if (props.contact.id === null || props.contact.id === undefined || isNaN(Number(props.contact.id))) {
+      console.error('props.contact.id无效:', props.contact.id);
+      showToast('聊天对象ID无效');
+      return null;
+    }
+    return props.contact;
+  }
+  
+  try {
+    const contactStr = route.query.contact;
+    if (!contactStr) {
+      showToast('未找到聊天对象信息');
+      return null;
+    }
+    
+    const contactObj = JSON.parse(decodeURIComponent(contactStr));
+    
+    // 增强验证：确保id存在且为有效数字
+    if (!contactObj || contactObj.id === null || contactObj.id === undefined || isNaN(Number(contactObj.id))) {
+      console.error('路由参数id无效:', contactObj.id);
+      showToast('聊天对象ID无效');
+      return null;
+    }
+    
+    return contactObj;
+  } catch (e) {
+    console.error('解析聊天对象失败:', e);
+    showToast('解析聊天对象失败');
+    return null;
+  }
 });
 
-// 获取对方用户ID
+// 新增：添加receiverId计算属性
 const receiverId = computed(() => {
-  return contactInfo.value?.id;
+  if (!contactInfo.value) return null;
+  return Number(contactInfo.value.id); // 确保转换为数字类型
 });
 
-// 获取聊天记录
 const fetchMessages = async () => {
-  if (!receiverId.value || !props.currentUserId) {
-    showToast('无法获取聊天对象');
+  // 详细错误提示
+  if (!receiverId.value) {
+    showToast('聊天对象ID不存在，请返回重试');
+    console.error('缺失receiverId:', { contactInfo: contactInfo.value, routeQuery: route.query });
+    return;
+  }
+
+  if (!props.currentUserId) {
+    showToast('当前用户ID无效，请重新登录');
+    console.error('缺失currentUserId:', { propsCurrentUserId: props.currentUserId });
     return;
   }
 
   try {
     loading.value = true;
-    
+
     // 获取双向消息
     const [sentRes, receivedRes] = await Promise.all([
-      request.get('/common/chat/get', { 
-        params: { 
-          senderId: props.currentUserId, 
-          receiverId: receiverId.value 
-        } 
+      request.get('/common/chat/get', {
+        params: {
+          senderId: props.currentUserId,
+          receiverId: receiverId.value
+        }
       }),
-      request.get('/common/chat/get1', { 
-        params: { 
-          senderId: receiverId.value, 
-          receiverId: props.currentUserId 
-        } 
+      request.get('/common/chat/get1', {
+        params: {
+          senderId: receiverId.value,
+          receiverId: props.currentUserId
+        }
       })
     ]);
 
@@ -100,7 +144,7 @@ const fetchMessages = async () => {
       .filter(msg => {
         const msgSender = Number(msg.senderId);
         const msgReceiver = Number(msg.receiverId);
-        return (msgSender === Number(props.currentUserId) && msgReceiver === receiverId.value) || 
+        return (msgSender === Number(props.currentUserId) && msgReceiver === receiverId.value) ||
                (msgSender === receiverId.value && msgReceiver === Number(props.currentUserId));
       })
       .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
@@ -120,16 +164,26 @@ const handleSend = async () => {
     return;
   }
 
+  if (!receiverId.value) {
+    showToast('聊天对象ID不存在');
+    return;
+  }
+
+  if (!props.currentUserId) {
+    showToast('当前用户ID无效，请重新登录');
+    return;
+  }
+
   try {
     const response = await request.post('/common/chat', {
       senderId: props.currentUserId,
       receiverId: receiverId.value,
       content: messageContent.value
     });
-    
+
     messages.value.push(response.data);
     messageContent.value = '';
-    
+
     // 滚动到底部
     setTimeout(() => {
       const messageList = document.querySelector('.message-list');
@@ -137,7 +191,7 @@ const handleSend = async () => {
         messageList.scrollTop = messageList.scrollHeight;
       }
     }, 50);
-    
+
   } catch (error) {
     console.error('发送失败:', error);
     showToast('发送失败，请重试');
