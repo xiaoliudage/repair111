@@ -30,8 +30,8 @@
         />
         
         <van-field
-          v-model="budget"
-          name="budget"
+          v-model="budgetAmount"
+          name="budgetAmount"
           label="预算金额"
           placeholder="请输入预算金额"
           :rules="[
@@ -62,7 +62,7 @@ const router = useRouter();
 const taskTitle = ref('');
 const serviceType = ref('');  // 改为文本输入
 const taskDescription = ref('');
-const budget = ref('');
+const budgetAmount = ref('');
 
 const onSubmit = async () => {
   try {
@@ -71,7 +71,8 @@ const onSubmit = async () => {
       taskTitle: taskTitle.value,
       serviceType: serviceType.value,
       taskDescription: taskDescription.value,
-      budget: budget.value
+      budgetAmount: budgetAmount.value
+
     }, {
       headers: {
         'Authorization': `Bearer ${token}`
