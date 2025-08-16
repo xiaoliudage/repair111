@@ -64,14 +64,40 @@ const goBack = () => {
   router.go(-1)
 }
 
-const goToChat = (contact) => {
+/* const goToChat = (contact) => {
   router.push({ 
     path: '/chat', 
     query: { 
-      contact: JSON.stringify(contact) 
+      contact: JSON.stringify({
+        id: contact.id,
+        username: contact.username,
+        phone: contact.phone,
+        address: contact.address
+      }) 
     } 
-  })
-}
+  });
+}; */
+
+
+const goToChat = (contact) => {
+  console.log('准备跳转的联系人:', contact); // 调试用
+  
+  // 确保传递了正确的数据结构
+  const contactData = {
+    id: Number(contact.id),  // 确保转换为数字
+    username: contact.username,
+    phone: contact.phone,
+    address: contact.address
+  };
+  
+  router.push({ 
+    path: '/chat', 
+    query: { 
+      contact: JSON.stringify(contactData),
+      currentUserId: localStorage.getItem('userId') // 显式传递当前用户ID
+    } 
+  });
+};
 
 onMounted(() => {
   loadMessageList()

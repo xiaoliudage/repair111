@@ -9,6 +9,8 @@ import UserProfile from '../views/UserProfile.vue';
 import Profile from '../views/Profile.vue';
 // 导入消息列表组件
 import MessageList from '../views/MessageList.vue';
+import ChatPage from '../views/ChatPage.vue'; // 新增聊天页面
+
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
@@ -21,7 +23,16 @@ const routes = [
   { path: '/user/profile', name: 'UserProfile', component: UserProfile },
   { path: '/edit-profile', redirect: '/user/profile' },
   // 添加消息列表路由
-  { path: '/message-list', name: 'MessageList', component: MessageList }
+  { path: '/message-list', name: 'MessageList', component: MessageList },
+  { 
+    path: '/chat', 
+    name: 'ChatPage',
+    component: ChatPage,
+    /* props: (route) => ({ 
+      contact: route.query.contact ? JSON.parse(route.query.contact) : null,
+      currentUserId: localStorage.getItem('userId')
+    }) */
+  }
 ];
 
 const router = createRouter({
