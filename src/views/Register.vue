@@ -130,7 +130,7 @@ const handleRegister = async () => {
     }
 
     if (selectedRole.value === '普通用户') {
-      url = '/api/user/register';
+      url = '/api/user/add';
     } else {
       url = '/api/user/repair_add';
     }

@@ -86,16 +86,36 @@ const form = ref({
   baseFee: 0
 });
 
-// 页面加载时获取当前用户ID
-onMounted(() => {
-  const userInfoStr = localStorage.getItem('userInfo');
-  if (userInfoStr) {
-    const userInfo = JSON.parse(userInfoStr);
-    form.value = { ...userInfo };
-    form.value.userId = userInfo.id; // 确保userId正确设置
-  } else {
+// 页面加载时从后端获取用户信息
+onMounted(async () => {
+  const userId = localStorage.getItem('userId');
+  if (!userId) {
     showToast('用户未登录');
     router.push('/login');
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem('token');
+    // 获取用户基本信息判断用户类型
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    // 根据用户类型选择不同的API路径
+    const isRepairWorker = userInfo.repairField !== undefined;
+    const url = isRepairWorker
+      ? '/repair/update/getById'
+      : '/user/update/getById';
+
+    const response = await request.get(url, {
+      params: { id: userId },
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    form.value = response.data;
+    form.value.userId = Number(userId); // 确保userId正确设置
+  } catch (error) {
+    showToast('获取用户信息失败');
+    console.error('Failed to fetch user info:', error);
   }
 });
 
